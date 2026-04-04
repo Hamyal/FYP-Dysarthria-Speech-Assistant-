@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_overview"
+            android:icon="@drawable/ic_menu_list_drawer"
+            android:title="@string/overview" />
+        <item
+            android:id="@+id/nav_edit_profile"
+            android:icon="@android:drawable/ic_menu_edit"
+            android:title="@string/edit_profile" />
+        <item
+            android:id="@+id/nav_personal_drills"
+            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:title="@string/personal_drills" />
+        <item
+            android:id="@+id/nav_assigned_drills"
+            android:icon="@android:drawable/ic_menu_agenda"
+            android:title="@string/assigned_drills" />
+        <item
+            android:id="@+id/nav_sessions"
+            android:icon="@android:drawable/ic_menu_sort_by_size"
+            android:title="@string/total_sessions" />
+        <item
+            android:id="@+id/nav_reports"
+            android:icon="@android:drawable/ic_menu_report_image"
+            android:title="@string/reports" />
+        <item
+            android:id="@+id/nav_ai_suggestions"
+            android:icon="@android:drawable/ic_menu_info_details"
+            android:title="@string/ai_summary" />
+        <item
+            android:id="@+id/nav_talk_with_agent"
+            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:title="@string/talk_with_agent" />
+        <item
+            android:id="@+id/nav_games"
+            android:icon="@android:drawable/ic_menu_my_calendar"
+            android:title="@string/games" />
+        <item
+            android:id="@+id/nav_chat"
+            android:icon="@android:drawable/ic_menu_send"
+            android:title="@string/chat" />
+    </group>
+    <item
+        android:id="@+id/nav_logout"
+        android:icon="@android:drawable/ic_menu_revert"
+        android:title="@string/logout" />
+</menu>

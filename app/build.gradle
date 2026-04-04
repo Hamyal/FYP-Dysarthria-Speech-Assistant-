@@ -1,0 +1,64 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
+}
+
+def getGroqApiKey() {
+    def f = rootProject.file("local.properties")
+    if (!f.exists()) return ""
+    def props = new Properties()
+    props.load(f.newDataInputStream())
+    return props.getProperty("GROQ_API_KEY", "") ?: ""
+}
+
+android {
+    namespace 'com.example.mya'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.example.mya"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // VocalAid API: use 10.0.2.2 for emulator, or your PC IP for physical device
+        buildConfigField "String", "VOCALAID_API_URL", "\"http://10.0.2.2:5001\""
+        // Optional: set GROQ_API_KEY in local.properties to call Groq from the app (local.properties is gitignored)
+        buildConfigField "String", "GROQ_API_KEY", "\"${getGroqApiKey()}\""
+    }
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.auth
+    implementation libs.firebase.database
+    implementation libs.firebase.storage
+
+    implementation libs.appcompat
+    implementation libs.material
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation libs.activity
+    implementation libs.constraintlayout
+    implementation libs.recyclerview
+    implementation libs.google.firebase.auth
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+}

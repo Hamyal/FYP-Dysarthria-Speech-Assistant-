@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "223443972869",
+    "firebase_url": "https://fypproject-487fb-default-rtdb.firebaseio.com",
+    "project_id": "fypproject-487fb",
+    "storage_bucket": "fypproject-487fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223443972869:android:58ef4047f714f20587bd6c",
+        "android_client_info": {
+          "package_name": "com.example.mya"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALbt3mWqn78CbCotnU-Uzb9dCGHBVeGMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223443972869:android:3b906a9e7500d4fa87bd6c",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALbt3mWqn78CbCotnU-Uzb9dCGHBVeGMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

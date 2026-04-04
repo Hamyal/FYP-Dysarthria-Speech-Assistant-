@@ -1,0 +1,23 @@
+[
+  {"id": "TORGO_E01", "transcription": "a", "difficulty": "easy"},
+  {"id": "TORGO_E02", "transcription": "go", "difficulty": "easy"},
+  {"id": "TORGO_E03", "transcription": "she", "difficulty": "easy"},
+  {"id": "TORGO_E04", "transcription": "two", "difficulty": "easy"},
+  {"id": "TORGO_E05", "transcription": "yes", "difficulty": "easy"},
+  {"id": "TORGO_E06", "transcription": "no", "difficulty": "easy"},
+  {"id": "TORGO_E07", "transcription": "hi", "difficulty": "easy"},
+  {"id": "TORGO_E08", "transcription": "bye", "difficulty": "easy"},
+  {"id": "TORGO_M01", "transcription": "The big dog ran.", "difficulty": "medium"},
+  {"id": "TORGO_M02", "transcription": "She sells seashells.", "difficulty": "medium"},
+  {"id": "TORGO_M03", "transcription": "Please pass the salt.", "difficulty": "medium"},
+  {"id": "TORGO_M04", "transcription": "I need some water.", "difficulty": "medium"},
+  {"id": "TORGO_M05", "transcription": "What time is it?", "difficulty": "medium"},
+  {"id": "TORGO_M06", "transcription": "The sky is blue today.", "difficulty": "medium"},
+  {"id": "TORGO_M07", "transcription": "My name is John.", "difficulty": "medium"},
+  {"id": "TORGO_M08", "transcription": "How are you feeling?", "difficulty": "medium"},
+  {"id": "TORGO_H01", "transcription": "The rehabilitation therapist helped me practice every day.", "difficulty": "hard"},
+  {"id": "TORGO_H02", "transcription": "Articulation exercises improve speech clarity over several weeks.", "difficulty": "hard"},
+  {"id": "TORGO_H03", "transcription": "My grandmother enjoys gardening in the backyard during summer.", "difficulty": "hard"},
+  {"id": "TORGO_H04", "transcription": "The university announced a new research program on motor speech disorders.", "difficulty": "hard"},
+  {"id": "TORGO_H05", "transcription": "Please repeat the sentence slowly and as clearly as you can.", "difficulty": "hard"}
+]

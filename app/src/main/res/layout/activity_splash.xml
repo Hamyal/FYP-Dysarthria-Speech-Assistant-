@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_splash"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Sparkles around the screen -->
+    <ImageView
+        android:id="@+id/sparkle1"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="start|top"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="72dp"
+        android:alpha="0.85"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle" />
+    <ImageView
+        android:id="@+id/sparkle2"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="end|top"
+        android:layout_marginEnd="40dp"
+        android:layout_marginTop="100dp"
+        android:alpha="0.7"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle_small" />
+    <ImageView
+        android:id="@+id/sparkle3"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="24dp"
+        android:alpha="0.75"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle" />
+    <ImageView
+        android:id="@+id/sparkle4"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="28dp"
+        android:alpha="0.8"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle" />
+    <ImageView
+        android:id="@+id/sparkle5"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_gravity="start|bottom"
+        android:layout_marginStart="48dp"
+        android:layout_marginBottom="120dp"
+        android:alpha="0.65"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle_small" />
+    <ImageView
+        android:id="@+id/sparkle6"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="36dp"
+        android:layout_marginBottom="100dp"
+        android:alpha="0.9"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_sparkle" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="48dp">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!-- Sparkles near logo -->
+            <ImageView
+                android:id="@+id/sparkleLogo1"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="start|top"
+                android:layout_marginStart="-8dp"
+                android:layout_marginTop="-4dp"
+                android:alpha="0.9"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_sparkle_small" />
+            <ImageView
+                android:id="@+id/sparkleLogo2"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="end|top"
+                android:layout_marginEnd="-6dp"
+                android:layout_marginTop="4dp"
+                android:alpha="0.8"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_sparkle_small" />
+            <ImageView
+                android:id="@+id/sparkleLogo3"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="end|bottom"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="8dp"
+                android:alpha="0.7"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_sparkle_small" />
+            <ImageView
+                android:id="@+id/sparkleLogo4"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="-2dp"
+                android:alpha="0.85"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_sparkle_small" />
+
+            <View
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/ic_splash_logo"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:letterSpacing="0.05"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:alpha="0.92"
+            android:gravity="center"
+            android:letterSpacing="0.02"
+            android:text="@string/app_tagline"
+            android:textColor="@color/white"
+            android:textSize="15sp" />
+
+        <ProgressBar
+            android:id="@+id/splashProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:indeterminateTint="@color/white"
+            android:visibility="visible"
+            tools:ignore="UseAppCompatAlpha" />
+    </LinearLayout>
+</FrameLayout>

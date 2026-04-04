@@ -1,0 +1,97 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "Therapist": {
+      ".indexOn": ["code"],
+      ".read": "auth != null",
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "$uid === auth.uid",
+        "photoUrl": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 2048)"
+        }
+      }
+    },
+    "Patient": {
+      ".indexOn": ["assigned_therapist", "email"],
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || data.child('assigned_therapist').val() === auth.uid)",
+        ".write": "auth != null && (auth.uid === $uid || newData.child('assigned_therapist').val() === auth.uid)",
+        "photoUrl": {
+          ".validate": "auth.uid === $uid ? (!newData.exists() || (newData.isString() && newData.val().length <= 2048)) : (!newData.exists() || (data.exists() && newData.val() === data.val()))"
+        }
+      }
+    },
+    "therapist_patients": {
+      "$therapistId": {
+        ".read": "auth != null && auth.uid === $therapistId",
+        "$patientId": {
+          ".write": "auth != null && (auth.uid === $patientId || auth.uid === $therapistId)",
+          ".validate": "newData.isNumber() || newData.val() === true"
+        }
+      }
+    },
+    "patient_requests": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "conversations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "sessions": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "notes": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "tags": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "treatment_plans": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "exercises": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "chatbot_interaction": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "progress_Reports": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "speechDrills": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "assigned_drills": {
+      ".indexOn": ["patientId", "therapistId"],
+      "$drillId": {
+        ".read": "auth != null && (!data.exists() || data.child('patientId').val() === auth.uid || data.child('therapistId').val() === auth.uid)",
+        ".write": "auth != null && ((!data.exists() && newData.child('therapistId').val() === auth.uid) || (data.exists() && (data.child('patientId').val() === auth.uid || data.child('therapistId').val() === auth.uid)))"
+      }
+    },
+    "patient_sessions": {
+      "$patientId": {
+        ".read": "auth != null && (auth.uid === $patientId || root.child('Patient').child($patientId).child('assigned_therapist').val() === auth.uid)",
+        ".write": "auth != null && (auth.uid === $patientId || root.child('Patient').child($patientId).child('assigned_therapist').val() === auth.uid)"
+      }
+    }
+  }
+}
