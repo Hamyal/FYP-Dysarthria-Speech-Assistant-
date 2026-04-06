@@ -19,14 +19,15 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/primary">
+                android:background="@drawable/bg_toolbar_gradient"
+                android:elevation="4dp">
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/toolbar"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:background="@color/primary"
-                    android:elevation="@dimen/toolbar_elevation"
+                    android:background="@android:color/transparent"
+                    android:elevation="0dp"
                     android:theme="@style/ThemeOverlay.MyA.Toolbar.Drawer"
                     app:title="@string/welcome_therapist"
                     app:titleTextAppearance="@style/TextAppearance.MyA.Toolbar.Title"
@@ -67,59 +68,58 @@
                 android:orientation="vertical"
                 android:paddingBottom="80dp">
 
-                <!-- Dashboard header: colored strip with name (like reference) -->
+                <!-- Profile first: large photo, then name, then email -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_dashboard_header"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
                     android:paddingHorizontal="@dimen/screen_edge_h"
-                    android:paddingTop="@dimen/spacing_md"
-                    android:paddingBottom="@dimen/spacing_lg">
+                    android:paddingTop="@dimen/spacing_xl"
+                    android:paddingBottom="@dimen/spacing_xl">
 
                     <com.google.android.material.card.MaterialCardView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
+                        android:layout_width="@dimen/profile_avatar_home"
+                        android:layout_height="@dimen/profile_avatar_home"
                         app:cardBackgroundColor="@color/primary_container"
-                        app:cardCornerRadius="28dp"
-                        app:cardElevation="2dp"
-                        app:strokeColor="#66FFFFFF"
-                        app:strokeWidth="1dp">
+                        app:cardCornerRadius="52dp"
+                        app:cardElevation="8dp"
+                        app:strokeColor="#99FFFFFF"
+                        app:strokeWidth="3dp">
 
                         <ImageView
                             android:id="@+id/therapistAvatar"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:contentDescription="@string/profile_photo"
-                            android:scaleType="centerInside"
+                            android:scaleType="centerCrop"
                             android:src="@drawable/ic_person_avatar" />
                     </com.google.android.material.card.MaterialCardView>
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/therapistNameText"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/spacing_md"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:letterSpacing="-0.01"
+                        android:textAlignment="center"
+                        android:textColor="@color/white"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/therapistNameText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/therapistEmailText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:alpha="0.9"
-                            android:textColor="@color/white"
-                            android:textSize="14sp" />
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/therapistEmailText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:alpha="0.92"
+                        android:gravity="center"
+                        android:textAlignment="center"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -136,18 +136,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xl"
                     android:text="@string/your_code"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="@color/on_surface"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.02" />
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.MyA.SectionOverline" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
                     app:cardBackgroundColor="@color/primary_container"
-                    app:cardCornerRadius="@dimen/card_radius"
-                    app:cardElevation="@dimen/card_elevation"
+                    app:cardCornerRadius="@dimen/card_radius_xl"
+                    app:cardElevation="@dimen/card_elevation_raised"
                     app:strokeColor="@color/primary_light"
                     app:strokeWidth="1dp">
 
@@ -192,10 +190,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xl"
                     android:text="@string/your_patients"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="@color/on_surface"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.02" />
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.MyA.SectionOverline" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/patientsList"
@@ -214,10 +210,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_lg"
                     android:text="@string/patient_requests"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="@color/on_surface"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.02" />
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.MyA.SectionOverline" />
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -254,8 +248,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/surface_container"
-            android:elevation="12dp"
             app:menu="@menu/menu_bottom_nav_therapist"
             app:itemIconTint="@color/bottom_nav_item_color"
             app:itemTextColor="@color/bottom_nav_item_color" />

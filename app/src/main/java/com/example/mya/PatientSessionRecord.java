@@ -14,6 +14,10 @@ public class PatientSessionRecord {
     private int durationSeconds;
     private Double dysarthriaScore;
     private String dysarthriaPrediction;
+    /** What the patient actually said (Whisper / API), distinct from drill reference transcription. */
+    private String speechTranscription;
+    /** English ARPAbet-style phones from API (G2P of speech transcription), not direct acoustic phonemes. */
+    private String speechPhonemes;
     private String note;
     private String recordingUrl;
 
@@ -37,6 +41,10 @@ public class PatientSessionRecord {
     public void setDysarthriaScore(Double dysarthriaScore) { this.dysarthriaScore = dysarthriaScore; }
     public String getDysarthriaPrediction() { return dysarthriaPrediction; }
     public void setDysarthriaPrediction(String dysarthriaPrediction) { this.dysarthriaPrediction = dysarthriaPrediction; }
+    public String getSpeechTranscription() { return speechTranscription; }
+    public void setSpeechTranscription(String speechTranscription) { this.speechTranscription = speechTranscription; }
+    public String getSpeechPhonemes() { return speechPhonemes; }
+    public void setSpeechPhonemes(String speechPhonemes) { this.speechPhonemes = speechPhonemes; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
     public String getRecordingUrl() { return recordingUrl; }

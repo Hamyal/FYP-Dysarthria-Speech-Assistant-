@@ -35,14 +35,10 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void startSparkleAnimations() {
-        Animation twinkle = AnimationUtils.loadAnimation(this, R.anim.twinkle);
-        if (twinkle == null) return;
-        twinkle.setRepeatMode(Animation.REVERSE);
-        twinkle.setRepeatCount(Animation.INFINITE);
-
         int[] sparkleIds = {
                 R.id.sparkle1, R.id.sparkle2, R.id.sparkle3, R.id.sparkle4,
-                R.id.sparkle5, R.id.sparkle6,
+                R.id.sparkle5, R.id.sparkle6, R.id.sparkle7, R.id.sparkle8,
+                R.id.sparkle9, R.id.sparkle10,
                 R.id.sparkleLogo1, R.id.sparkleLogo2, R.id.sparkleLogo3, R.id.sparkleLogo4
         };
         for (int i = 0; i < sparkleIds.length; i++) {
@@ -52,7 +48,7 @@ public class SplashActivity extends AppCompatActivity {
                 if (a != null) {
                     a.setRepeatMode(Animation.REVERSE);
                     a.setRepeatCount(Animation.INFINITE);
-                    a.setStartOffset(i * 120);
+                    a.setStartOffset(i * 120L);
                     v.startAnimation(a);
                 }
             }

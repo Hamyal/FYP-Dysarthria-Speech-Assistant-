@@ -28,6 +28,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseUser;
@@ -291,6 +292,10 @@ public class PatientHomeActivity extends AppCompatActivity {
                     if (n.isEmpty()) n = "Patient";
                     patientNameText.setText(getString(R.string.hi_name, n));
                     String em = snapshot.child("email").getValue(String.class);
+                    if (em == null || em.isEmpty()) {
+                        FirebaseUser u = FirebaseHelper.getCurrentUser();
+                        em = u != null ? u.getEmail() : null;
+                    }
                     patientEmailText.setText(em != null ? em : "");
                     patientEmailText.setVisibility(em != null && !em.isEmpty() ? View.VISIBLE : View.GONE);
                     String photoUrl = snapshot.child("photoUrl").getValue(String.class);
@@ -319,10 +324,46 @@ public class PatientHomeActivity extends AppCompatActivity {
                 .setTitle(R.string.profile_photo)
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) launchCamera(uid);
-                    else if (which == 1) pickImageLauncher.launch("image/*");
+                    else if (which == 1) showGalleryAndPresetsSheet(uid);
                     else if (which == 2) removePhoto(uid);
                 })
                 .show();
+    }
+
+    private void showGalleryAndPresetsSheet(String uid) {
+        View content = getLayoutInflater().inflate(R.layout.sheet_profile_photo_presets, null, false);
+        BottomSheetDialog sheet = new BottomSheetDialog(this, R.style.ThemeOverlay_MyA_BottomSheetDialog);
+        sheet.setContentView(content);
+
+        int[] imageViewIds = {
+                R.id.preset_1, R.id.preset_2, R.id.preset_3, R.id.preset_4, R.id.preset_5
+        };
+        int[] drawables = PresetAvatars.DRAWABLE_IDS;
+        for (int i = 0; i < drawables.length && i < imageViewIds.length; i++) {
+            ImageView iv = content.findViewById(imageViewIds[i]);
+            iv.setImageResource(drawables[i]);
+            final int resId = drawables[i];
+            iv.setOnClickListener(v -> {
+                sheet.dismiss();
+                uploadPhotoFromPresetDrawable(uid, resId);
+            });
+        }
+
+        content.findViewById(R.id.btn_pick_device).setOnClickListener(v -> {
+            sheet.dismiss();
+            pickImageLauncher.launch("image/*");
+        });
+
+        sheet.show();
+    }
+
+    private void uploadPhotoFromPresetDrawable(String uid, int drawableResId) {
+        byte[] bytes = PresetAvatars.encodeDrawableAsJpeg(this, drawableResId);
+        if (bytes == null || bytes.length == 0) {
+            Toast.makeText(this, R.string.failed_read_image, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        uploadPhotoBytes(uid, bytes);
     }
 
     private void launchCamera(String uid) {

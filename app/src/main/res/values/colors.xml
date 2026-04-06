@@ -2,49 +2,59 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <!-- Primary: Calming teal for therapy app -->
-    <color name="primary">#1B5E6B</color>
-    <color name="primary_dark">#0F3D47</color>
-    <color name="primary_light">#348B9B</color>
-    <color name="primary_container">#B8E4EA</color>
-    <color name="on_primary_container">#00282E</color>
-    <!-- Secondary: Warm sage -->
-    <color name="secondary">#4A6B5E</color>
-    <color name="secondary_container">#CCE8DD</color>
+
+    <!-- VocalAid · Aurora palette: ocean teal + soft rose + porcelain surfaces -->
+    <color name="primary">#0F6B7A</color>
+    <color name="primary_dark">#063D48</color>
+    <color name="primary_light">#3EB8C9</color>
+    <color name="primary_container">#C5ECF2</color>
+    <color name="on_primary_container">#003239</color>
+
+    <color name="secondary">#5A7F72</color>
+    <color name="secondary_container">#D5EBE2</color>
     <color name="on_secondary">#FFFFFF</color>
-    <color name="on_secondary_container">#072419</color>
-    <!-- Tertiary / Accent: Soft coral for warmth and CTAs -->
-    <color name="tertiary">#C86B4A</color>
-    <color name="tertiary_container">#FFDAD2</color>
+    <color name="on_secondary_container">#0D241C</color>
+
+    <color name="tertiary">#B85C6F</color>
+    <color name="tertiary_container">#FFD9E0</color>
     <color name="on_tertiary">#FFFFFF</color>
-    <color name="on_tertiary_container">#3B0F00</color>
-    <!-- Surfaces -->
-    <color name="surface">#F4F9F8</color>
-    <color name="surface_variant">#DAE6E4</color>
+    <color name="on_tertiary_container">#3D0818</color>
+
+    <color name="surface">#F5FAFA</color>
+    <color name="surface_variant">#DDE8E6</color>
     <color name="surface_container">#FFFFFF</color>
-    <color name="surface_container_high">#EEF4F3</color>
-    <!-- Outlines -->
-    <color name="outline">#6F7B7A</color>
-    <color name="outline_variant">#B8C4C3</color>
-    <color name="error">#BA1A1A</color>
+    <color name="surface_container_high">#ECF5F4</color>
+
+    <color name="outline">#7A8986</color>
+    <color name="outline_variant">#C5D0CE</color>
+    <color name="error">#B3261E</color>
     <color name="on_primary">#FFFFFF</color>
-    <color name="on_surface">#191C1C</color>
-    <color name="on_surface_variant">#3F4948</color>
-    <!-- Gradient tints -->
-    <color name="gradient_start">#EEF7F6</color>
-    <color name="gradient_end">#E0EDEA</color>
-    <!-- Difficulty badges -->
+    <color name="on_surface">#121917</color>
+    <color name="on_surface_variant">#3D4A48</color>
+
+    <!-- Splash: soft sage → mint → pool teal -->
+    <color name="splash_gradient_start">#F0FAF7</color>
+    <color name="splash_gradient_mid">#D8EDE6</color>
+    <color name="splash_gradient_end">#C2E0D6</color>
+    <color name="splash_gradient_corner">#B5DDD4</color>
+    <color name="splash_overlay_teal">#283EB8C9</color>
+
+    <!-- Screen mesh gradient -->
+    <color name="gradient_start">#F2FBFC</color>
+    <color name="gradient_mid">#E4F4F6</color>
+    <color name="gradient_end">#D6E6EA</color>
+    <color name="gradient_glow">#E8F4F0</color>
+
     <color name="difficulty_easy">#2E7D32</color>
-    <color name="difficulty_medium">#F57C00</color>
+    <color name="difficulty_medium">#E65100</color>
     <color name="difficulty_hard">#C62828</color>
-    <!-- Card accent strip -->
-    <color name="card_accent">#1B5E6B</color>
-    <!-- Drill / Voice accent -->
+
+    <color name="card_accent">#0F6B7A</color>
     <color name="drill_easy_bg">#E8F5E9</color>
     <color name="drill_medium_bg">#FFF3E0</color>
     <color name="drill_hard_bg">#FFEBEE</color>
-    <color name="mic_highlight">#348B9B</color>
-    <!-- UI polish -->
-    <color name="card_overlay_light">#0AFFFFFF</color>
-    <color name="text_secondary">#5C6B6A</color>
+    <color name="mic_highlight">#3EB8C9</color>
+
+    <color name="card_overlay_light">#0DFFFFFF</color>
+    <color name="text_secondary">#52605E</color>
 </resources>

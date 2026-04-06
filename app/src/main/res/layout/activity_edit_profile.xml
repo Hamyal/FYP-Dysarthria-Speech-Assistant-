@@ -14,21 +14,21 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
+            android:background="@drawable/bg_toolbar_gradient"
             android:elevation="4dp"
-            app:title="@string/edit_profile"
-            app:titleTextAppearance="@style/TextAppearance.MyA.Toolbar.Title"
-            app:titleTextColor="@color/white"
-            app:titleCentered="true"
             app:navigationIcon="?attr/homeAsUpIndicator"
-            app:navigationIconTint="@color/white" />
+            app:navigationIconTint="@color/white"
+            app:title="@string/edit_profile"
+            app:titleCentered="true"
+            app:titleTextAppearance="@style/TextAppearance.MyA.Toolbar.Title"
+            app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,59 +38,106 @@
             android:paddingTop="@dimen/spacing_lg"
             android:paddingBottom="@dimen/spacing_xxl">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/profile_photo"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="@color/on_surface" />
+                app:cardBackgroundColor="@color/surface_container"
+                app:cardCornerRadius="@dimen/card_radius_xl"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:gravity="center"
-                android:text="@string/tap_to_change_profile_photo"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/spacing_lg">
 
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/spacing_md">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/profileAvatarCard"
-                    android:layout_width="112dp"
-                    android:layout_height="112dp"
-                    app:cardBackgroundColor="@color/primary_container"
-                    app:cardCornerRadius="56dp"
-                    app:cardElevation="4dp"
-                    app:strokeColor="@color/outline_variant"
-                    app:strokeWidth="1dp">
-
-                    <ImageView
-                        android:id="@+id/profileAvatar"
+                    <View
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/profile_photo"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_person_avatar" />
-                </com.google.android.material.card.MaterialCardView>
-            </FrameLayout>
+                        android:layout_height="4dp"
+                        android:background="@drawable/bg_login_card_accent_top" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnChangePhoto"
-                style="@style/Widget.Material3.Button.TonalButton"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="@string/profile_photo"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="@color/on_surface"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/spacing_md"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:gravity="center"
+                        android:text="@string/tap_to_change_profile_photo"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:cardBackgroundColor="@color/primary_container"
+                            app:cardCornerRadius="60dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/primary_light"
+                            app:strokeWidth="3dp">
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/profileAvatarCard"
+                                android:layout_width="120dp"
+                                android:layout_height="120dp"
+                                android:layout_margin="4dp"
+                                app:cardBackgroundColor="@color/surface_container_high"
+                                app:cardCornerRadius="58dp"
+                                app:cardElevation="2dp"
+                                app:strokeColor="@color/outline_variant"
+                                app:strokeWidth="1dp">
+
+                                <ImageView
+                                    android:id="@+id/profileAvatar"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:contentDescription="@string/profile_photo"
+                                    android:scaleType="centerInside"
+                                    android:src="@drawable/ic_person_avatar" />
+                            </com.google.android.material.card.MaterialCardView>
+                        </com.google.android.material.card.MaterialCardView>
+                    </FrameLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnChangePhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:letterSpacing="0.02"
+                        android:minHeight="48dp"
+                        android:text="@string/change_profile_photo"
+                        app:cornerRadius="@dimen/card_radius_sm"
+                        app:icon="@drawable/ic_photo_library"
+                        app:iconGravity="textStart"
+                        app:iconPadding="10dp"
+                        app:iconTint="@color/on_primary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/spacing_sm"
-                android:text="@string/change_profile_photo"
-                app:cornerRadius="@dimen/button_corner_radius" />
+                android:layout_marginTop="@dimen/spacing_xl"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:text="@string/edit_profile_details_section"
+                android:textAllCaps="true"
+                android:textAppearance="@style/TextAppearance.MyA.SectionOverline" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -159,14 +206,14 @@
                 android:layout_marginBottom="12dp"
                 android:hint="@string/therapist_experience"
                 android:visibility="gone"
-                app:helperText="@string/therapist_experience_hint"
-                app:helperTextEnabled="true"
                 app:boxBackgroundColor="@color/surface_container"
                 app:boxCornerRadiusBottomEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="@color/primary">
+                app:boxStrokeColor="@color/primary"
+                app:helperText="@string/therapist_experience_hint"
+                app:helperTextEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/experience"
@@ -214,7 +261,7 @@
                 android:id="@+id/codeValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 android:textColor="@color/primary"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -223,11 +270,17 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:letterSpacing="0.03"
+                android:minHeight="56dp"
                 android:text="@string/save_profile"
-                app:cornerRadius="@dimen/card_radius_sm" />
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="@dimen/card_radius_sm"
+                app:elevation="3dp" />
         </LinearLayout>
     </ScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

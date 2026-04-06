@@ -202,6 +202,10 @@ public class TherapistHomeActivity extends AppCompatActivity implements RequestA
                     String n = (name != null ? name : "") + " " + (last != null ? last : "");
                     therapistNameText.setText(n.trim().isEmpty() ? "Therapist" : n.trim());
                     String em = snapshot.child("email").getValue(String.class);
+                    if (em == null || em.isEmpty()) {
+                        FirebaseUser u = FirebaseHelper.getCurrentUser();
+                        em = u != null ? u.getEmail() : null;
+                    }
                     therapistEmailText.setText(em != null ? em : "");
                     therapistEmailText.setVisibility(em != null && !em.isEmpty() ? View.VISIBLE : View.GONE);
                     String photoUrl = snapshot.child("photoUrl").getValue(String.class);

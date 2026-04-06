@@ -135,6 +135,8 @@ public class SessionsSummaryActivity extends AppCompatActivity {
             Object score = snap.child("dysarthriaScore").getValue();
             r.setDysarthriaScore(score instanceof Number ? ((Number) score).doubleValue() : null);
             r.setDysarthriaPrediction(getString(snap, "dysarthriaPrediction"));
+            r.setSpeechTranscription(getString(snap, "speechTranscription"));
+            r.setSpeechPhonemes(getString(snap, "speechPhonemes"));
             r.setRecordingUrl(getString(snap, "recordingUrl"));
             return r;
         } catch (Exception e) {

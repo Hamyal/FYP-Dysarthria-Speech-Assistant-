@@ -1,3 +1,4 @@
+# Deprecated: use `database.rules.json` in the project root (deploy via `firebase.json` or paste JSON from that file).
 # Paste these in Firebase Console > Realtime Database > Rules
 
 # Rules (adjust .read/.write for your security needs; below allows authenticated read/write)

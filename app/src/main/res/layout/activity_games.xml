@@ -15,8 +15,8 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            android:elevation="@dimen/toolbar_elevation"
+            android:background="@drawable/bg_toolbar_gradient"
+            android:elevation="4dp"
             app:title="@string/games"
             app:titleTextAppearance="@style/TextAppearance.MyA.Toolbar.Title"
             app:titleTextColor="@color/white"
@@ -44,17 +44,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/quick_actions"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="@color/on_surface"
-                android:textStyle="bold"
-                android:letterSpacing="0.02" />
+                android:textAllCaps="true"
+                android:textAppearance="@style/TextAppearance.MyA.SectionOverline" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="Choose a game to play"
+                android:text="@string/games_choose_prompt"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="@color/on_surface_variant" />
 
@@ -66,9 +64,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container"
-                app:cardCornerRadius="@dimen/card_radius"
-                app:cardElevation="@dimen/card_elevation_soft"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="@dimen/card_radius_xl"
+                app:cardElevation="@dimen/card_elevation_raised"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -77,9 +76,9 @@
                     android:padding="@dimen/spacing_lg">
 
                     <View
-                        android:layout_width="4dp"
+                        android:layout_width="5dp"
                         android:layout_height="match_parent"
-                        android:background="@color/primary"
+                        android:background="@drawable/bg_strip_primary_gradient"
                         android:minHeight="48dp" />
 
                     <LinearLayout
@@ -121,9 +120,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardBackgroundColor="@color/surface_container"
-                app:cardCornerRadius="@dimen/card_radius"
-                app:cardElevation="@dimen/card_elevation_soft"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="@dimen/card_radius_xl"
+                app:cardElevation="@dimen/card_elevation_raised"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -132,9 +132,9 @@
                     android:padding="@dimen/spacing_lg">
 
                     <View
-                        android:layout_width="4dp"
+                        android:layout_width="5dp"
                         android:layout_height="match_parent"
-                        android:background="@color/secondary"
+                        android:background="@drawable/bg_strip_secondary_gradient"
                         android:minHeight="48dp" />
 
                     <LinearLayout

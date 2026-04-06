@@ -177,6 +177,8 @@ public class PatientProgressActivity extends AppCompatActivity {
             Object score = snap.child("dysarthriaScore").getValue();
             r.setDysarthriaScore(score instanceof Number ? ((Number) score).doubleValue() : null);
             r.setDysarthriaPrediction(getString(snap, "dysarthriaPrediction"));
+            r.setSpeechTranscription(getString(snap, "speechTranscription"));
+            r.setSpeechPhonemes(getString(snap, "speechPhonemes"));
             r.setNote(getString(snap, "note"));
             r.setRecordingUrl(getString(snap, "recordingUrl"));
             return r;

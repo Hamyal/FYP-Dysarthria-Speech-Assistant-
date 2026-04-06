@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Splash: full screen, no action bar, dark status bar -->
     <style name="Theme.Splash" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_splash</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/primary_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/splash_gradient_start</item>
+        <item name="android:navigationBarColor">@color/splash_gradient_end</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowFullscreen">false</item>
     </style>
 
@@ -27,42 +28,70 @@
         <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
         <item name="colorOutline">@color/outline</item>
         <item name="colorError">@color/error</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
         <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface_container</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MyA.Small</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MyA.Medium</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.MyA.Large</item>
+        <item name="bottomNavigationStyle">@style/Widget.MyA.BottomNavigation</item>
+        <item name="materialButtonStyle">@style/Widget.MyA.Button</item>
+        <item name="materialCardViewStyle">@style/Widget.MyA.Card</item>
     </style>
+
     <style name="Theme.MyA" parent="Base.Theme.MyA" />
 
-    <!-- Toolbar title: smaller size so long titles (e.g. Patient Progress) fit on one line -->
     <style name="TextAppearance.MyA.Toolbar.Title" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:letterSpacing">0.02</item>
         <item name="android:textColor">@color/white</item>
     </style>
 
-    <!-- Toolbar overlay: white overflow icon and title on primary background -->
     <style name="ThemeOverlay.MyA.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:colorControlNormal">@color/white</item>
         <item name="android:textColorPrimary">@color/white</item>
     </style>
 
-    <!-- Toolbar with list/menu icon for home screens with drawer -->
     <style name="ThemeOverlay.MyA.Toolbar.Drawer" parent="ThemeOverlay.MyA.Toolbar">
         <item name="homeAsUpIndicator">@drawable/ic_menu_list</item>
     </style>
 
     <style name="ShapeAppearance.MyA.Small" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">16dp</item>
     </style>
     <style name="ShapeAppearance.MyA.Medium" parent="ShapeAppearance.Material3.MediumComponent">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
+        <item name="cornerSize">28dp</item>
     </style>
     <style name="ShapeAppearance.MyA.Large" parent="ShapeAppearance.Material3.LargeComponent">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20dp</item>
+        <item name="cornerSize">34dp</item>
+    </style>
+
+    <style name="ThemeOverlay.MyA.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.MyA.BottomSheet.Modal</item>
+    </style>
+
+    <style name="Widget.MyA.BottomSheet.Modal" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.MyA.BottomSheet</item>
+        <item name="backgroundTint">@color/surface_container_high</item>
+    </style>
+
+    <style name="ShapeAppearance.MyA.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">32dp</item>
+        <item name="cornerSizeTopRight">32dp</item>
+    </style>
+
+    <style name="Widget.MyA.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/card_radius</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">1dp</item>
     </style>
 </resources>

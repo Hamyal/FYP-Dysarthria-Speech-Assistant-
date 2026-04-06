@@ -3,6 +3,7 @@ package com.example.mya;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -64,8 +65,13 @@ public class RecordDrillActivity extends AppCompatActivity {
     private boolean isPersonalized;
     private TextView wordsText;
     private TextView statusText;
+    private TextView transcriptionSectionLabel;
+    private TextView transcriptionResult;
+    private TextView phonemesSectionLabel;
+    private TextView phonemesResult;
     private MaterialButton btnRecord;
     private MaterialButton btnListen;
+    private MaterialButton btnDone;
     private ProgressBar progress;
     private boolean isRecording;
     private AudioRecord audioRecord;
@@ -74,8 +80,13 @@ public class RecordDrillActivity extends AppCompatActivity {
     private byte[] lastWavBytes;
     /** Set after upload to Firebase Storage (before or independent of API result). */
     private String pendingStorageUrl;
+    /** Copy for playback when local file is missing (personalized flow). */
+    private String lastFirebaseRecordingUrl;
     private MediaPlayer mediaPlayer;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    /** Mic capture only — never block this with HTTP analyze. */
+    private final ExecutorService recordExecutor = Executors.newSingleThreadExecutor();
+    /** Dysarthria API calls — separate from recording to avoid queued “stuck analyzing”. */
+    private final ExecutorService analyzeExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -99,11 +110,21 @@ public class RecordDrillActivity extends AppCompatActivity {
 
         wordsText = findViewById(R.id.wordsToSpeak);
         statusText = findViewById(R.id.statusText);
+        transcriptionSectionLabel = findViewById(R.id.transcriptionSectionLabel);
+        transcriptionResult = findViewById(R.id.transcriptionResult);
+        phonemesSectionLabel = findViewById(R.id.phonemesSectionLabel);
+        phonemesResult = findViewById(R.id.phonemesResult);
         btnRecord = findViewById(R.id.btnRecord);
         btnListen = findViewById(R.id.btnListen);
+        btnDone = findViewById(R.id.btnDone);
         progress = findViewById(R.id.progress);
         btnListen.setVisibility(View.GONE);
+        btnDone.setVisibility(View.GONE);
         btnListen.setOnClickListener(v -> playSavedRecording());
+        btnDone.setOnClickListener(v -> {
+            setResult(RESULT_OK);
+            finish();
+        });
 
         String words = (drill.getTargetWords() != null && !drill.getTargetWords().isEmpty())
                 ? drill.getTargetWords()
@@ -181,13 +202,15 @@ public class RecordDrillActivity extends AppCompatActivity {
             return;
         }
         pendingStorageUrl = null;
+        lastFirebaseRecordingUrl = null;
         lastWavBytes = null;
+        clearResultPanels();
         audioRecord.startRecording();
         isRecording = true;
         btnRecord.setText(R.string.stop_recording);
         statusText.setText(R.string.recording_speak_now);
 
-        executor.execute(() -> {
+        recordExecutor.execute(() -> {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             // read(short[]) + explicit LE bytes — read(byte[]) is unreliable for PCM16 on some devices (silent WAVs)
             int shortBufLen = recordBufSize / 2;
@@ -317,19 +340,42 @@ public class RecordDrillActivity extends AppCompatActivity {
                 });
     }
 
+    private void clearResultPanels() {
+        transcriptionSectionLabel.setVisibility(View.GONE);
+        transcriptionResult.setVisibility(View.GONE);
+        phonemesSectionLabel.setVisibility(View.GONE);
+        phonemesResult.setVisibility(View.GONE);
+        btnDone.setVisibility(View.GONE);
+        btnListen.setVisibility(View.GONE);
+    }
+
     private void runAnalyzeOnBackgroundThread(byte[] wavData) {
-        executor.execute(() -> {
+        analyzeExecutor.execute(() -> {
             try {
                 String url = BuildConfig.VOCALAID_API_URL + "/analyze";
                 OkHttpClient client = new OkHttpClient.Builder().connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS).build();
-                RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .readTimeout(180, java.util.concurrent.TimeUnit.SECONDS).build();
+                MultipartBody.Builder mp = new MultipartBody.Builder().setType(MultipartBody.FORM)
                         .addFormDataPart("audio", "recording.wav",
-                                RequestBody.create(MediaType.parse("audio/wav"), wavData))
-                        .build();
+                                RequestBody.create(MediaType.parse("audio/wav"), wavData));
+                if (patientId != null && !patientId.isEmpty())
+                    mp.addFormDataPart("patient_id", patientId);
+                if (isPersonalized && drill.getTargetWords() != null && !drill.getTargetWords().trim().isEmpty())
+                    mp.addFormDataPart("target_text", drill.getTargetWords().trim());
+                RequestBody body = mp.build();
                 Request req = new Request.Builder().url(url).post(body).build();
                 Response resp = client.newCall(req).execute();
                 String json = resp.body() != null ? resp.body().string() : "{}";
+                if (!resp.isSuccessful()) {
+                    String errMsg = json;
+                    try {
+                        JSONObject eo = new JSONObject(json);
+                        if (eo.has("error")) errMsg = eo.optString("error", errMsg);
+                    } catch (Exception ignored) {}
+                    final String display = "HTTP " + resp.code() + (errMsg.isEmpty() ? "" : ": " + errMsg);
+                    mainHandler.post(() -> onAnalysisError(display));
+                    return;
+                }
                 JSONObject obj = new JSONObject(json);
                 if (obj.has("error")) {
                     mainHandler.post(() -> onAnalysisError(obj.optString("error")));
@@ -337,7 +383,9 @@ public class RecordDrillActivity extends AppCompatActivity {
                 }
                 double accuracy = obj.optDouble("accuracy", 0);
                 String prediction = obj.optString("prediction", "");
-                mainHandler.post(() -> onAnalysisResult(accuracy, prediction, wavData));
+                String transcription = obj.optString("transcription", "");
+                String phonemes = obj.optString("phonemes", "");
+                mainHandler.post(() -> onAnalysisResult(accuracy, prediction, wavData, transcription, phonemes));
             } catch (Exception e) {
                 Log.e(TAG, "API error", e);
                 String msg = e.getMessage();
@@ -353,10 +401,35 @@ public class RecordDrillActivity extends AppCompatActivity {
         return Math.max(1, pcmBytes / 2 / SAMPLE_RATE);
     }
 
-    private void onAnalysisResult(double accuracy, String prediction, byte[] wavBytesFromApi) {
+    private void onAnalysisResult(double accuracy, String prediction, byte[] wavBytesFromApi, String transcription, String phonemes) {
         progress.setVisibility(View.GONE);
         btnRecord.setEnabled(true);
-        statusText.setText(getString(R.string.accuracy_result, String.format("%.1f", accuracy)));
+        if (isPersonalized) {
+            statusText.setText(getString(R.string.personalized_match_result, String.format("%.1f", accuracy)));
+        } else {
+            statusText.setText(getString(R.string.accuracy_result, String.format("%.1f", accuracy)));
+        }
+
+        lastFirebaseRecordingUrl = (pendingStorageUrl != null && !pendingStorageUrl.isEmpty()) ? pendingStorageUrl : "";
+        if (isPersonalized) {
+            if (transcription != null && !transcription.trim().isEmpty()) {
+                transcriptionSectionLabel.setVisibility(View.VISIBLE);
+                transcriptionResult.setVisibility(View.VISIBLE);
+                transcriptionResult.setText(transcription.trim());
+            } else {
+                transcriptionSectionLabel.setVisibility(View.GONE);
+                transcriptionResult.setVisibility(View.GONE);
+            }
+            if (phonemes != null && !phonemes.trim().isEmpty()) {
+                phonemesSectionLabel.setVisibility(View.VISIBLE);
+                phonemesResult.setVisibility(View.VISIBLE);
+                phonemesResult.setText(phonemes.trim());
+            } else {
+                phonemesSectionLabel.setVisibility(View.GONE);
+                phonemesResult.setVisibility(View.GONE);
+            }
+            btnListen.setVisibility(View.VISIBLE);
+        }
 
         if (!isPersonalized && drill.getAssignedDrillId() != null && !drill.getAssignedDrillId().isEmpty()) {
             FirebaseHelper.updateAssignedDrillWithAnalysis(drill.getAssignedDrillId(), accuracy, prediction);
@@ -387,13 +460,21 @@ public class RecordDrillActivity extends AppCompatActivity {
         record.setDate(new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date()));
         record.setDysarthriaScore(accuracy / 100.0);
         record.setDysarthriaPrediction(prediction);
+        if (transcription != null && !transcription.isEmpty())
+            record.setSpeechTranscription(transcription);
+        if (phonemes != null && !phonemes.isEmpty())
+            record.setSpeechPhonemes(phonemes);
         byte[] wavForDuration = wavBytesFromApi != null ? wavBytesFromApi : lastWavBytes;
         record.setDurationSeconds(wavDurationSeconds(wavForDuration));
 
         Runnable saveAndFinish = () -> FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() -> {
             Toast.makeText(this, R.string.analysis_saved, Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
-            finish();
+            if (isPersonalized) {
+                btnDone.setVisibility(View.VISIBLE);
+            } else {
+                setResult(RESULT_OK);
+                finish();
+            }
         }));
 
         // Voice already in Storage from uploadVoiceToStorageThenAnalyze when pendingStorageUrl is set
@@ -413,7 +494,7 @@ public class RecordDrillActivity extends AppCompatActivity {
                     },
                     err -> saveAndFinish.run());
         } else if (lastRecordingPath != null) {
-            executor.execute(() -> {
+            analyzeExecutor.execute(() -> {
                 try {
                     java.io.FileInputStream fis = new java.io.FileInputStream(new File(lastRecordingPath));
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -456,6 +537,8 @@ public class RecordDrillActivity extends AppCompatActivity {
 
         // If voice is already in Storage, still save a session so playback works from history
         if (pendingStorageUrl != null && !pendingStorageUrl.isEmpty()) {
+            lastFirebaseRecordingUrl = pendingStorageUrl;
+            btnListen.setVisibility(View.VISIBLE);
             PatientSessionRecord record = new PatientSessionRecord();
             record.setTherapistId(drill.getTherapistId() != null ? drill.getTherapistId() : "");
             record.setAssignedDrillId(drill.getAssignedDrillId() != null ? drill.getAssignedDrillId() : "");
@@ -470,8 +553,10 @@ public class RecordDrillActivity extends AppCompatActivity {
             record.setDysarthriaPrediction("");
             record.setNote("Analysis unavailable");
             record.setRecordingUrl(pendingStorageUrl);
-            FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() ->
-                    Toast.makeText(this, R.string.recording_saved_cloud_analysis_failed, Toast.LENGTH_LONG).show()));
+            FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() -> {
+                Toast.makeText(this, R.string.recording_saved_cloud_analysis_failed, Toast.LENGTH_LONG).show();
+                if (isPersonalized) btnDone.setVisibility(View.VISIBLE);
+            }));
             return;
         }
         Toast.makeText(this, R.string.analysis_error_toast, Toast.LENGTH_LONG).show();
@@ -495,47 +580,80 @@ public class RecordDrillActivity extends AppCompatActivity {
                         record.setDysarthriaPrediction("");
                         record.setNote("Analysis unavailable");
                         record.setRecordingUrl(url);
-                        FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() ->
-                                Toast.makeText(this, R.string.recording_saved_cloud_analysis_failed, Toast.LENGTH_LONG).show()));
+                        lastFirebaseRecordingUrl = url;
+                        btnListen.setVisibility(View.VISIBLE);
+                        FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() -> {
+                            Toast.makeText(this, R.string.recording_saved_cloud_analysis_failed, Toast.LENGTH_LONG).show();
+                            if (isPersonalized) btnDone.setVisibility(View.VISIBLE);
+                        }));
                     },
                     err -> Log.e(TAG, "Could not save voice after analysis failure", err));
         }
     }
 
+    private void releaseMediaPlayer() {
+        if (mediaPlayer == null) return;
+        try {
+            if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+            mediaPlayer.release();
+        } catch (Exception e) {
+            Log.w(TAG, "releaseMediaPlayer", e);
+        }
+        mediaPlayer = null;
+    }
+
     private void playSavedRecording() {
-        if (lastRecordingPath == null) return;
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-                mediaPlayer = null;
-            } else {
-                mediaPlayer.release();
-                mediaPlayer = null;
-            }
+        releaseMediaPlayer();
+        boolean useLocalFile = lastRecordingPath != null && new File(lastRecordingPath).exists();
+        boolean useCloud = lastFirebaseRecordingUrl != null && !lastFirebaseRecordingUrl.isEmpty();
+        boolean useBytes = lastWavBytes != null && lastWavBytes.length > MIN_WAV_STORAGE_BYTES;
+        if (!useLocalFile && !useCloud && !useBytes) {
+            Toast.makeText(this, R.string.no_recording_available, Toast.LENGTH_SHORT).show();
+            return;
         }
         try {
-            mediaPlayer = new MediaPlayer();
+            MediaPlayer mp = new MediaPlayer();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                mp.setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build());
             } else {
-                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
             }
-            mediaPlayer.setDataSource(lastRecordingPath);
-            mediaPlayer.prepare();
-            mediaPlayer.setOnCompletionListener(mp -> {
-                if (mediaPlayer != null) {
-                    mediaPlayer.release();
-                    mediaPlayer = null;
-                }
+            mp.setOnCompletionListener(m -> releaseMediaPlayer());
+            mp.setOnErrorListener((m, what, extra) -> {
+                releaseMediaPlayer();
+                Toast.makeText(RecordDrillActivity.this, R.string.playback_error, Toast.LENGTH_SHORT).show();
+                return true;
             });
-            mediaPlayer.start();
+
+            if (useLocalFile) {
+                mp.setDataSource(lastRecordingPath);
+                mp.prepare();
+                mediaPlayer = mp;
+                mp.start();
+                return;
+            }
+            if (useBytes) {
+                File tmp = new File(getCacheDir(), "playback_last.wav");
+                try (FileOutputStream fos = new FileOutputStream(tmp)) {
+                    fos.write(lastWavBytes);
+                }
+                mp.setDataSource(tmp.getAbsolutePath());
+                mp.prepare();
+                mediaPlayer = mp;
+                mp.start();
+                return;
+            }
+            mp.setDataSource(this, Uri.parse(lastFirebaseRecordingUrl));
+            mp.prepareAsync();
+            mp.setOnPreparedListener(MediaPlayer::start);
+            mediaPlayer = mp;
         } catch (Exception e) {
             Log.e(TAG, "Playback failed", e);
-            Toast.makeText(this, "Could not play recording.", Toast.LENGTH_SHORT).show();
+            releaseMediaPlayer();
+            Toast.makeText(this, R.string.playback_error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -545,14 +663,9 @@ public class RecordDrillActivity extends AppCompatActivity {
         if (audioRecord != null) {
             try { audioRecord.release(); } catch (Exception e) {}
         }
-        if (mediaPlayer != null) {
-            try {
-                if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-                mediaPlayer.release();
-            } catch (Exception e) {}
-            mediaPlayer = null;
-        }
-        executor.shutdown();
+        releaseMediaPlayer();
+        recordExecutor.shutdown();
+        analyzeExecutor.shutdown();
         super.onDestroy();
     }
 }

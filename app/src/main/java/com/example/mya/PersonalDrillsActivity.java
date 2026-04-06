@@ -24,6 +24,7 @@ public class PersonalDrillsActivity extends AppCompatActivity {
     private RadioGroup difficultyGroup;
     private RadioButton radioEasy, radioMedium, radioHard;
     private String allowedLevel = "easy";
+    private ValueEventListener speechLevelListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +55,7 @@ public class PersonalDrillsActivity extends AppCompatActivity {
     }
 
     private void loadTherapistSetLevel() {
-        FirebaseHelper.getPatientSpeechLevelRef(patientId).addValueEventListener(new ValueEventListener() {
+        speechLevelListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String level = snapshot.getValue(String.class);
@@ -63,8 +64,19 @@ public class PersonalDrillsActivity extends AppCompatActivity {
                 applyLevelRestriction();
             }
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+            public void onCancelled(@NonNull DatabaseError error) {
+                applyLevelRestriction();
+            }
+        };
+        FirebaseHelper.getPatientSpeechLevelRef(patientId).addValueEventListener(speechLevelListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (patientId != null && speechLevelListener != null) {
+            FirebaseHelper.getPatientSpeechLevelRef(patientId).removeEventListener(speechLevelListener);
+        }
+        super.onDestroy();
     }
 
     /** Patient can only select up to therapist-set level. Medium/Hard unlock by practice (80%+), not manually. */

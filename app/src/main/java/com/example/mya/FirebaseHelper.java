@@ -59,6 +59,8 @@ public class FirebaseHelper {
     public static final String PATH_SPEECH_DRILLS = "speechDrills";
     /** Therapist-assigned drills: assigned_drills/{assignedDrillId} */
     public static final String PATH_ASSIGNED_DRILLS = "assigned_drills";
+    /** patient_drill_index/{patientUid}/{drillId} = true — lets patients list drills without a filtered query (rules-friendly). */
+    public static final String PATH_PATIENT_DRILL_INDEX = "patient_drill_index";
     /** Patient session count + records: patient_sessions/{patientId}/sessionCount, patient_sessions/{patientId}/sessions/{sessionId} */
     public static final String PATH_PATIENT_SESSIONS = "patient_sessions";
     /** therapist_patients/{therapistUid}/{patientUid} — lets therapists list patients (Patient queries are unreliable under security rules). */
@@ -839,12 +841,17 @@ public class FirebaseHelper {
 
     public static void saveAssignedDrill(AssignedDrill drill, Runnable onSuccess) {
         if (drill == null) return;
+        String pid = drill.getPatientId() != null ? drill.getPatientId().trim() : "";
+        if (pid.isEmpty()) {
+            Log.e(TAG, "saveAssignedDrill: missing patientId");
+            return;
+        }
         String id = rootRef.child(PATH_ASSIGNED_DRILLS).push().getKey();
         if (id == null) return;
         drill.setAssignedDrillId(id);
         Map<String, Object> data = new HashMap<>();
         data.put("assignedDrillId", id);
-        data.put("patientId", drill.getPatientId());
+        data.put("patientId", pid);
         data.put("therapistId", drill.getTherapistId());
         data.put("therapistName", drill.getTherapistName() != null ? drill.getTherapistName() : "");
         data.put("title", drill.getTitle() != null ? drill.getTitle() : "");
@@ -860,13 +867,22 @@ public class FirebaseHelper {
         data.put("transcription", drill.getTranscription() != null ? drill.getTranscription() : "");
         data.put("torgoUtteranceId", drill.getTorgoUtteranceId() != null ? drill.getTorgoUtteranceId() : "");
 
-        rootRef.child(PATH_ASSIGNED_DRILLS).child(id).setValue(data)
+        Map<String, Object> multi = new HashMap<>();
+        multi.put(PATH_ASSIGNED_DRILLS + "/" + id, data);
+        multi.put(PATH_PATIENT_DRILL_INDEX + "/" + pid + "/" + id, true);
+        rootRef.updateChildren(multi)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "Assigned drill saved: " + id);
+                        Log.d(TAG, "Assigned drill saved + index: " + id);
                         if (onSuccess != null) onSuccess.run();
                     } else Log.e(TAG, "Failed to save assigned drill", task.getException());
                 });
+    }
+
+    /** Patient's drill id list (each child key = assigned_drills key). */
+    public static DatabaseReference getPatientDrillIndexRef(String patientId) {
+        String p = patientId != null ? patientId.trim() : "";
+        return rootRef.child(PATH_PATIENT_DRILL_INDEX).child(p);
     }
 
     public static Query getAssignedDrillsByPatient(String patientId) {
@@ -964,6 +980,8 @@ public class FirebaseHelper {
         data.put("durationSeconds", record.getDurationSeconds());
         data.put("dysarthriaScore", record.getDysarthriaScore() != null ? record.getDysarthriaScore() : 0.0);
         data.put("dysarthriaPrediction", record.getDysarthriaPrediction() != null ? record.getDysarthriaPrediction() : "");
+        data.put("speechTranscription", record.getSpeechTranscription() != null ? record.getSpeechTranscription() : "");
+        data.put("speechPhonemes", record.getSpeechPhonemes() != null ? record.getSpeechPhonemes() : "");
         data.put("note", record.getNote() != null ? record.getNote() : "");
         data.put("recordingUrl", record.getRecordingUrl() != null ? record.getRecordingUrl() : "");
 
@@ -971,6 +989,7 @@ public class FirebaseHelper {
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
                         Log.e(TAG, "Failed to add session record", task.getException());
+                        if (onSuccess != null) onSuccess.run();
                         return;
                     }
                     rootRef.child(PATH_PATIENT_SESSIONS).child(patientId).child("sessionCount").runTransaction(new Transaction.Handler() {

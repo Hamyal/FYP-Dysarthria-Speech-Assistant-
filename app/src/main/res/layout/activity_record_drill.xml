@@ -11,7 +11,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary"
+        android:background="@drawable/bg_toolbar_gradient"
         android:elevation="@dimen/toolbar_elevation"
         android:theme="@style/ThemeOverlay.MyA.Toolbar"
         app:title="@string/record_and_analyze"
@@ -81,6 +81,45 @@
                         android:layout_marginTop="@dimen/spacing_md"
                         android:visibility="gone" />
 
+                    <TextView
+                        android:id="@+id/transcriptionSectionLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="@string/transcription_heard_label"
+                        android:textAppearance="?attr/textAppearanceLabelLarge"
+                        android:textColor="@color/primary"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/transcriptionResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="@color/on_surface"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/phonemesSectionLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="@string/phonemes_label"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="@color/on_surface_variant"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/phonemesResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_xs"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="@color/on_surface_variant"
+                        android:fontFamily="monospace"
+                        android:visibility="gone" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnRecord"
                         android:layout_width="match_parent"
@@ -115,6 +154,18 @@
                         app:iconGravity="textStart"
                         app:iconPadding="10dp"
                         app:iconTint="@color/primary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDone"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/button_height_secondary"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/done"
+                        android:visibility="gone"
+                        app:cornerRadius="@dimen/button_corner_radius" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>

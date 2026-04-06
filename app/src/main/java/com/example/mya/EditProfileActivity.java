@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
@@ -149,10 +150,47 @@ public class EditProfileActivity extends AppCompatActivity {
                 .setTitle(R.string.profile_photo)
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) launchCamera(uid);
-                    else if (which == 1) pickImageLauncher.launch("image/*");
+                    else if (which == 1) showGalleryAndPresetsSheet();
                     else if (which == 2) removePhoto();
                 })
                 .show();
+    }
+
+    /** Gallery flow: favorites row + button to open device picker. */
+    private void showGalleryAndPresetsSheet() {
+        View content = getLayoutInflater().inflate(R.layout.sheet_profile_photo_presets, null, false);
+        BottomSheetDialog sheet = new BottomSheetDialog(this, R.style.ThemeOverlay_MyA_BottomSheetDialog);
+        sheet.setContentView(content);
+
+        int[] imageViewIds = {
+                R.id.preset_1, R.id.preset_2, R.id.preset_3, R.id.preset_4, R.id.preset_5
+        };
+        int[] drawables = PresetAvatars.DRAWABLE_IDS;
+        for (int i = 0; i < drawables.length && i < imageViewIds.length; i++) {
+            ImageView iv = content.findViewById(imageViewIds[i]);
+            iv.setImageResource(drawables[i]);
+            final int resId = drawables[i];
+            iv.setOnClickListener(v -> {
+                sheet.dismiss();
+                uploadPhotoFromPresetDrawable(resId);
+            });
+        }
+
+        content.findViewById(R.id.btn_pick_device).setOnClickListener(v -> {
+            sheet.dismiss();
+            pickImageLauncher.launch("image/*");
+        });
+
+        sheet.show();
+    }
+
+    private void uploadPhotoFromPresetDrawable(int drawableResId) {
+        byte[] bytes = PresetAvatars.encodeDrawableAsJpeg(this, drawableResId);
+        if (bytes == null || bytes.length == 0) {
+            Toast.makeText(this, R.string.failed_read_image, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        uploadPhotoBytes(bytes);
     }
 
     private void launchCamera(String userUid) {

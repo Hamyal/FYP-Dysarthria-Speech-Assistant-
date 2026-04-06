@@ -7,3 +7,6 @@ numpy>=1.24.0
 librosa>=0.10.0
 scipy>=1.10.0
 groq>=0.4.0
+openai-whisper>=20231117
+g2p-en>=2.1.0
+nltk>=3.8.0

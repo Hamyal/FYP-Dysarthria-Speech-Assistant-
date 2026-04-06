@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
+            android:background="@drawable/bg_toolbar_gradient"
             android:elevation="4dp"
             app:title="@string/word_scramble"
             app:titleTextAppearance="@style/TextAppearance.MyA.Toolbar.Title"
