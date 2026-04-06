@@ -1017,6 +1017,12 @@ public class FirebaseHelper {
         return rootRef.child(PATH_PATIENT_SESSIONS).child(patientId).child("sessions").orderByChild("dateMs");
     }
 
+    /** Most recent N session records (by dateMs). */
+    public static Query getPatientSessionRecordsRecent(String patientId, int lastN) {
+        int n = Math.max(1, Math.min(lastN, 100));
+        return getPatientSessionRecords(patientId).limitToLast(n);
+    }
+
     public static Query getProgressReportsByPatientId(String patientId) {
         return rootRef.child(PATH_PROGRESS_REPORTS).orderByChild("patient_id").equalTo(patientId);
     }

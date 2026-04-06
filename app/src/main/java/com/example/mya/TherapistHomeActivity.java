@@ -113,7 +113,9 @@ public class TherapistHomeActivity extends AppCompatActivity implements RequestA
             }
             if (id == R.id.nav_talk_with_agent) {
                 drawerLayout.closeDrawer(GravityCompat.START);
-                startActivity(new Intent(this, AgentChatActivity.class));
+                Intent agent = new Intent(this, AgentChatActivity.class);
+                agent.putExtra(AgentChatActivity.EXTRA_THERAPIST_MODE, true);
+                startActivity(agent);
                 return true;
             }
             if (id == R.id.nav_logout) {

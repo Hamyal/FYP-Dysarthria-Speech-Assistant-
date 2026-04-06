@@ -621,8 +621,13 @@ def ai_chat():
     if role not in ("patient", "therapist"):
         role = "patient"
 
+    therapist_context = (data.get("therapist_context") or "").strip()
+
     # Build message list for Groq: system + conversation history
-    groq_messages = [{"role": "system", "content": DYSPHONIA_AGENT_SYSTEM}]
+    system_content = DYSPHONIA_AGENT_SYSTEM
+    if therapist_context:
+        system_content = DYSPHONIA_AGENT_SYSTEM + "\n\n" + therapist_context
+    groq_messages = [{"role": "system", "content": system_content}]
     for m in messages_in:
         r = (m.get("role") or "user").lower()
         c = (m.get("content") or "").strip()

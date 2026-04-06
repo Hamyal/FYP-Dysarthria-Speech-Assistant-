@@ -176,6 +176,8 @@
     <string name="ai_summary">AI Summary</string>
     <string name="talk_with_agent">Talk with agent</string>
     <string name="agent_chat_hint">Ask about dysarthria, exercises, or tips…</string>
+    <string name="agent_chat_therapist_hint">Name a patient for details, or ask for an overview of all patients.</string>
+    <string name="agent_chat_therapist_subtitle">Therapist · your patients</string>
     <string name="agent_error">Could not get reply.</string>
     <string name="ai_suggestions">AI suggestions</string>
     <string name="get_summary">Get summary</string>

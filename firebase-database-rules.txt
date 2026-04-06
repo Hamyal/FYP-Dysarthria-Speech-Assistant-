@@ -1,62 +1,6 @@
+<<<<<<< HEAD
 # Deprecated: use `database.rules.json` in the project root (deploy via `firebase.json` or paste JSON from that file).
 # Paste these in Firebase Console > Realtime Database > Rules
+=======
+>>>>>>> fe8023f17200b47dc4cd48b8bf042305ee38346c
 
-# Rules (adjust .read/.write for your security needs; below allows authenticated read/write)
-{
-  "rules": {
-    "users": { ".read": "auth != null", ".write": "auth != null" },
-    "Therapist": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["code", "therapist_id"]
-    },
-    "Patient": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["assigned_therapist", "email"]
-    },
-    "sessions": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["patient_id", "therapist_id"]
-    },
-    "messages": { ".read": "auth != null", ".write": "auth != null", ".indexOn": ["createdAt"] },
-    "conversations": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      "$convId": { "messages": { ".indexOn": ["timestamp"] } }
-    },
-    "notes": { ".read": "auth != null", ".write": "auth != null", ".indexOn": ["patient_id"] },
-    "tags": { ".read": "auth != null", ".write": "auth != null", ".indexOn": ["patient_id"] },
-    "treatment_plans": { ".read": "auth != null", ".write": "auth != null", ".indexOn": ["patient_id"] },
-    "chatbot_interaction": { ".read": "auth != null", ".write": "auth != null", ".indexOn": ["userId"] },
-    "patient_requests": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["therapistId", "patientId"]
-    },
-    "progress_Reports": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["patient_id", "therapist_id", "session_id"]
-    },
-    "speechDrills": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["assigned_to", "difficulty"]
-    },
-    "assigned_drills": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["patientId"]
-    },
-    "patient_sessions": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["dateMs"]
-    }
-  }
-}
-
-# In Firebase Console > Realtime Database > Rules tab, use the JSON above.
-# Ensure your database URL in FirebaseHelper matches your project (or remove the URL to use default).
