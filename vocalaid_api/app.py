@@ -6,6 +6,8 @@ VocalAid Dysarthria Speech Analysis API
 - GET /dataset/torgo: list TORGO-style phrases (?difficulty=easy|medium|hard).
 - GET /dataset/torgo/pick: random phrase with transcription for therapist drill assignment.
 - POST /ai/summary: patient history summary and suggestions (Groq).
+- POST /phoneme/profile: analyze patient session history → identify weak phonemes.
+- POST /phoneme/drills: generate targeted drills for weak phonemes.
 Run: python app.py
 Set GROQ_API_KEY (and optional LLM_MODEL) in env or .env. Emulator: http://10.0.2.2:5001
 Whisper: pip install openai-whisper (see requirements.txt).
@@ -14,6 +16,7 @@ Whisper: pip install openai-whisper (see requirements.txt).
   ENABLE_PHONEMES=0 to skip g2p-en (English phonemes derived from Whisper text, not direct acoustic alignment).
   Transcripts append to vocalaid_api/transcriptions/transcriptions.jsonl + per-request .json.
 Replace data/torgo_phrases.json with your TORGO export (id, transcription, difficulty) if needed.
+A/B Testing: Set AB_TEST_GROUP env var or pass ab_group in requests. "A" = personalized phoneme drills, "B" = random (control).
 """
 import os
 import io
@@ -22,6 +25,7 @@ import random
 import re
 import difflib
 import numpy as np
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -448,6 +452,11 @@ def analyze():
         if target_text:
             out["speech_clarity_percent"] = float(speech_clarity_percent)
             out["drill_match_percent"] = float(response_accuracy)
+            # Per-phoneme accuracy breakdown (for phoneme personalization)
+            if transcription.strip() and phonemes_enabled():
+                per_phoneme = compute_phoneme_accuracy(target_text, transcription)
+                if per_phoneme:
+                    out["phoneme_accuracy"] = per_phoneme
         if transcription_error:
             out["transcription_error"] = transcription_error
         if transcription_enabled() and transcription_saved_json:
@@ -649,6 +658,463 @@ def ai_chat():
         return jsonify({"reply": reply})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ---------- Phoneme-Level Personalization & A/B Testing ----------
+
+# Default A/B test group: "A" = personalized phoneme drills, "B" = random (control)
+DEFAULT_AB_GROUP = os.environ.get("AB_TEST_GROUP", "A").strip().upper()
+
+# Phoneme-to-word mapping: words that heavily exercise each ARPAbet phoneme
+PHONEME_WORD_MAP = {
+    # Plosives
+    "P": ["pop", "paper", "pepper", "happy", "apple", "cap", "tap", "sip"],
+    "B": ["baby", "bubble", "rabbit", "cab", "tub", "big", "ball", "bat"],
+    "T": ["top", "butter", "cat", "hat", "sit", "time", "table", "tent"],
+    "D": ["dog", "daddy", "ladder", "bed", "red", "door", "day", "did"],
+    "K": ["cat", "cake", "cookie", "back", "kick", "cup", "key", "kite"],
+    "G": ["go", "game", "bigger", "bag", "dog", "gate", "girl", "good"],
+    # Fricatives
+    "F": ["fish", "coffee", "leaf", "off", "fun", "five", "four", "fast"],
+    "V": ["van", "river", "love", "give", "very", "voice", "vine", "vest"],
+    "TH": ["think", "bath", "tooth", "three", "thick", "thin", "thumb", "thank"],
+    "DH": ["this", "mother", "breathe", "the", "that", "them", "there", "those"],
+    "S": ["sun", "bus", "miss", "see", "sit", "six", "say", "some"],
+    "Z": ["zoo", "buzz", "nose", "zip", "zero", "zone", "zap", "fizz"],
+    "SH": ["ship", "fish", "wash", "she", "shoe", "shop", "shut", "shell"],
+    "ZH": ["measure", "vision", "treasure", "pleasure", "usual", "beige"],
+    "HH": ["hat", "hello", "behind", "hot", "house", "hand", "head", "home"],
+    # Affricates
+    "CH": ["church", "kitchen", "match", "chair", "cheese", "child", "chin", "chop"],
+    "JH": ["jump", "bridge", "judge", "jar", "job", "join", "joy", "just"],
+    # Nasals
+    "M": ["mom", "hammer", "swim", "man", "map", "milk", "moon", "more"],
+    "N": ["no", "dinner", "sun", "new", "name", "nine", "nose", "net"],
+    "NG": ["sing", "ring", "long", "king", "song", "thing", "young", "bang"],
+    # Liquids
+    "L": ["love", "hello", "ball", "let", "look", "like", "long", "last"],
+    "R": ["run", "carry", "car", "red", "rain", "road", "room", "right"],
+    # Glides
+    "W": ["water", "away", "win", "walk", "want", "week", "well", "wide"],
+    "Y": ["yes", "beyond", "you", "year", "yet", "young", "your", "yell"],
+    # Vowels (common ones patients struggle with)
+    "AA": ["hot", "father", "car", "box", "top", "stop", "rock", "lot"],
+    "AE": ["cat", "bat", "hat", "man", "bad", "sad", "map", "back"],
+    "AH": ["but", "cup", "sun", "run", "fun", "up", "bus", "cut"],
+    "AO": ["all", "ball", "call", "fall", "tall", "walk", "talk", "wall"],
+    "AW": ["how", "now", "cow", "out", "down", "town", "house", "mouse"],
+    "AY": ["my", "time", "like", "five", "nine", "ride", "side", "wide"],
+    "EH": ["bed", "red", "head", "said", "ten", "pen", "let", "set"],
+    "ER": ["her", "bird", "turn", "first", "word", "work", "girl", "hurt"],
+    "EY": ["day", "say", "play", "make", "take", "name", "came", "game"],
+    "IH": ["sit", "big", "did", "his", "is", "it", "six", "this"],
+    "IY": ["see", "me", "he", "she", "tree", "free", "key", "be"],
+    "OW": ["go", "no", "so", "home", "bone", "phone", "show", "know"],
+    "OY": ["boy", "toy", "joy", "coin", "join", "oil", "point", "voice"],
+    "UH": ["book", "good", "look", "put", "foot", "cook", "wood", "took"],
+    "UW": ["too", "food", "moon", "room", "blue", "true", "new", "do"],
+}
+
+# Phoneme categories for grouping in reports
+PHONEME_CATEGORIES = {
+    "plosives": ["P", "B", "T", "D", "K", "G"],
+    "fricatives": ["F", "V", "TH", "DH", "S", "Z", "SH", "ZH", "HH"],
+    "affricates": ["CH", "JH"],
+    "nasals": ["M", "N", "NG"],
+    "liquids": ["L", "R"],
+    "glides": ["W", "Y"],
+    "vowels": ["AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH", "IY", "OW", "OY", "UH", "UW"],
+}
+
+
+def _strip_stress(phoneme: str) -> str:
+    """Remove stress digits from ARPAbet phoneme (e.g. 'AH0' → 'AH', 'EY1' → 'EY')."""
+    return re.sub(r"\d+$", "", phoneme.upper().strip())
+
+
+def _extract_phonemes_from_text(text: str) -> list:
+    """Run g2p on text and return list of stripped ARPAbet phonemes (no spaces/punctuation tokens)."""
+    g2p = get_g2p()
+    if g2p is None or not text or not text.strip():
+        return []
+    try:
+        tokens = g2p(text.strip())
+        phonemes = []
+        for t in tokens:
+            if t is None:
+                continue
+            t_str = str(t).strip()
+            if not t_str or t_str == " " or not t_str[0].isalpha():
+                continue
+            phonemes.append(_strip_stress(t_str))
+        return phonemes
+    except Exception:
+        return []
+
+
+def compute_phoneme_accuracy(target_text: str, spoken_text: str) -> dict:
+    """
+    Compare target vs spoken at phoneme level.
+    Returns dict: { phoneme: { "expected": int, "matched": int, "accuracy": float } }
+    """
+    target_phonemes = _extract_phonemes_from_text(target_text)
+    spoken_phonemes = _extract_phonemes_from_text(spoken_text)
+
+    if not target_phonemes:
+        return {}
+
+    # Align using SequenceMatcher on phoneme sequences
+    matcher = difflib.SequenceMatcher(None, target_phonemes, spoken_phonemes)
+    matched_indices = set()
+    for block in matcher.get_matching_blocks():
+        for i in range(block.size):
+            matched_indices.add(block.a + i)
+
+    # Count per-phoneme stats
+    phoneme_stats = defaultdict(lambda: {"expected": 0, "matched": 0})
+    for i, ph in enumerate(target_phonemes):
+        phoneme_stats[ph]["expected"] += 1
+        if i in matched_indices:
+            phoneme_stats[ph]["matched"] += 1
+
+    # Compute accuracy per phoneme
+    result = {}
+    for ph, stats in phoneme_stats.items():
+        acc = (stats["matched"] / stats["expected"] * 100.0) if stats["expected"] > 0 else 0.0
+        result[ph] = {
+            "expected": stats["expected"],
+            "matched": stats["matched"],
+            "accuracy": round(acc, 1),
+        }
+    return result
+
+
+def identify_weak_phonemes(sessions: list, threshold: float = 60.0) -> list:
+    """
+    Analyze multiple session records to find consistently weak phonemes.
+    Each session should have: target_text (or drillTitle/targetWords), transcription.
+    Returns sorted list of { phoneme, category, avg_accuracy, occurrences, sample_words }.
+    """
+    phoneme_scores = defaultdict(list)  # phoneme → list of accuracy scores
+
+    for session in sessions:
+        target = (session.get("target_text") or session.get("targetWords")
+                  or session.get("drillTitle") or "").strip()
+        spoken = (session.get("transcription") or session.get("speechTranscription") or "").strip()
+        if not target or not spoken:
+            continue
+
+        per_phoneme = compute_phoneme_accuracy(target, spoken)
+        for ph, stats in per_phoneme.items():
+            phoneme_scores[ph].append(stats["accuracy"])
+
+    # Compute averages and filter by threshold
+    weak = []
+    for ph, scores in phoneme_scores.items():
+        if len(scores) < 2:
+            # Need at least 2 occurrences to be meaningful
+            continue
+        avg = sum(scores) / len(scores)
+        if avg < threshold:
+            category = "other"
+            for cat, members in PHONEME_CATEGORIES.items():
+                if ph in members:
+                    category = cat
+                    break
+            sample_words = PHONEME_WORD_MAP.get(ph, [])[:4]
+            weak.append({
+                "phoneme": ph,
+                "category": category,
+                "avg_accuracy": round(avg, 1),
+                "occurrences": len(scores),
+                "sample_words": sample_words,
+            })
+
+    # Sort by accuracy ascending (weakest first)
+    weak.sort(key=lambda x: x["avg_accuracy"])
+    return weak
+
+
+def generate_targeted_drills(weak_phonemes: list, difficulty: str = "medium", count: int = 5) -> list:
+    """
+    Generate drill words/phrases that target the patient's weak phonemes.
+    Returns list of { target_text, target_phonemes, difficulty, rationale }.
+    """
+    if not weak_phonemes:
+        return []
+
+    drills = []
+    used_words = set()
+
+    for wp in weak_phonemes[:count]:
+        ph = wp["phoneme"]
+        word_pool = PHONEME_WORD_MAP.get(ph, [])
+        if not word_pool:
+            continue
+
+        # Pick words not yet used
+        available = [w for w in word_pool if w not in used_words]
+        if not available:
+            available = word_pool
+
+        if difficulty == "easy":
+            # Single word
+            word = random.choice(available)
+            used_words.add(word)
+            drills.append({
+                "target_text": word,
+                "target_phonemes": [ph],
+                "difficulty": "easy",
+                "rationale": f"Targets weak phoneme /{ph}/ (avg accuracy: {wp['avg_accuracy']}%)",
+            })
+        elif difficulty == "hard":
+            # Short sentence using the word
+            word = random.choice(available)
+            used_words.add(word)
+            phrases = [
+                f"Please say {word} clearly",
+                f"I want to say {word} today",
+                f"Can you hear me say {word}",
+                f"Practice saying {word} slowly",
+            ]
+            drills.append({
+                "target_text": random.choice(phrases),
+                "target_phonemes": [ph],
+                "difficulty": "hard",
+                "rationale": f"Sentence drill targeting /{ph}/ (avg accuracy: {wp['avg_accuracy']}%)",
+            })
+        else:
+            # Medium: two-word combo
+            picks = random.sample(available, min(2, len(available)))
+            used_words.update(picks)
+            drills.append({
+                "target_text": " ".join(picks),
+                "target_phonemes": [ph],
+                "difficulty": "medium",
+                "rationale": f"Word pair targeting /{ph}/ (avg accuracy: {wp['avg_accuracy']}%)",
+            })
+
+    return drills
+
+
+@app.route("/phoneme/profile", methods=["POST"])
+def phoneme_profile():
+    """
+    POST JSON: { patient_id, sessions: [ { target_text, transcription }, ... ], threshold (optional, default 60) }
+    Returns: { weak_phonemes: [...], total_phonemes_analyzed, ab_group }
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "JSON body required"}), 400
+
+    patient_id = (data.get("patient_id") or data.get("patientId") or "").strip()
+    sessions = data.get("sessions") or []
+    threshold = float(data.get("threshold", 60.0))
+    ab_group = (data.get("ab_group") or DEFAULT_AB_GROUP).strip().upper()
+
+    if not sessions:
+        return jsonify({"error": "sessions array required (each with target_text and transcription)"}), 400
+
+    weak = identify_weak_phonemes(sessions, threshold)
+
+    # Count total unique phonemes analyzed
+    all_phonemes = set()
+    for session in sessions:
+        target = (session.get("target_text") or session.get("targetWords")
+                  or session.get("drillTitle") or "").strip()
+        spoken = (session.get("transcription") or session.get("speechTranscription") or "").strip()
+        if target and spoken:
+            per_ph = compute_phoneme_accuracy(target, spoken)
+            all_phonemes.update(per_ph.keys())
+
+    return jsonify({
+        "patient_id": patient_id,
+        "weak_phonemes": weak,
+        "total_phonemes_analyzed": len(all_phonemes),
+        "threshold": threshold,
+        "ab_group": ab_group,
+    })
+
+
+@app.route("/phoneme/drills", methods=["POST"])
+def phoneme_drills():
+    """
+    POST JSON: { patient_id, sessions (or weak_phonemes directly), difficulty, count, ab_group }
+    A/B test: group "A" = personalized drills from weak phonemes, group "B" = random drills (control).
+    Returns: { drills: [...], ab_group, personalized: bool }
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "JSON body required"}), 400
+
+    patient_id = (data.get("patient_id") or data.get("patientId") or "").strip()
+    difficulty = (data.get("difficulty") or "medium").strip().lower()
+    if difficulty not in ("easy", "medium", "hard"):
+        difficulty = "medium"
+    count = int(data.get("count", 5))
+    count = max(1, min(count, 10))
+    ab_group = (data.get("ab_group") or DEFAULT_AB_GROUP).strip().upper()
+    if ab_group not in ("A", "B"):
+        ab_group = "A"
+
+    # Group B = control (random drills, no personalization)
+    if ab_group == "B":
+        # Generate random drills from DrillWordProvider-style static lists
+        all_words = []
+        for words in PHONEME_WORD_MAP.values():
+            all_words.extend(words)
+        random.shuffle(all_words)
+        drills = []
+        for w in all_words[:count]:
+            drills.append({
+                "target_text": w,
+                "target_phonemes": [],
+                "difficulty": difficulty,
+                "rationale": "Random drill (control group B)",
+            })
+        return jsonify({
+            "patient_id": patient_id,
+            "drills": drills,
+            "ab_group": "B",
+            "personalized": False,
+        })
+
+    # Group A = personalized drills based on weak phonemes
+    weak_phonemes = data.get("weak_phonemes")
+    if not weak_phonemes:
+        sessions = data.get("sessions") or []
+        if not sessions:
+            return jsonify({"error": "Provide sessions or weak_phonemes for personalized drills"}), 400
+        threshold = float(data.get("threshold", 60.0))
+        weak_phonemes = identify_weak_phonemes(sessions, threshold)
+
+    if not weak_phonemes:
+        # No weak phonemes found — fall back to random but still mark as group A
+        all_words = []
+        for words in PHONEME_WORD_MAP.values():
+            all_words.extend(words)
+        random.shuffle(all_words)
+        drills = [{"target_text": w, "target_phonemes": [], "difficulty": difficulty,
+                   "rationale": "No weak phonemes detected — general practice"} for w in all_words[:count]]
+        return jsonify({
+            "patient_id": patient_id,
+            "drills": drills,
+            "ab_group": "A",
+            "personalized": False,
+            "note": "No weak phonemes found above threshold. Patient performing well.",
+        })
+
+    drills = generate_targeted_drills(weak_phonemes, difficulty, count)
+    return jsonify({
+        "patient_id": patient_id,
+        "drills": drills,
+        "ab_group": "A",
+        "personalized": True,
+        "weak_phonemes_targeted": [wp["phoneme"] for wp in weak_phonemes[:count]],
+    })
+
+
+# ---------- A/B Test Logging ----------
+AB_LOG_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "transcriptions", "ab_test_log.jsonl"
+)
+
+
+@app.route("/ab/log", methods=["POST"])
+def ab_log():
+    """
+    POST JSON: { patient_id, ab_group, event (drill_assigned|drill_completed|session_result),
+                 accuracy, phonemes_targeted, timestamp }
+    Logs A/B test events for later analysis.
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "JSON body required"}), 400
+
+    record = {
+        "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "patient_id": data.get("patient_id") or data.get("patientId") or "",
+        "ab_group": (data.get("ab_group") or "").upper(),
+        "event": data.get("event") or "unknown",
+        "accuracy": data.get("accuracy"),
+        "phonemes_targeted": data.get("phonemes_targeted") or [],
+        "difficulty": data.get("difficulty") or "",
+        "extra": data.get("extra") or {},
+    }
+
+    os.makedirs(os.path.dirname(AB_LOG_PATH), exist_ok=True)
+    try:
+        with open(AB_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except OSError as e:
+        return jsonify({"error": f"Failed to write log: {e}"}), 500
+
+    return jsonify({"status": "logged", "record": record})
+
+
+@app.route("/ab/results", methods=["GET"])
+def ab_results():
+    """
+    GET: Returns A/B test summary statistics.
+    Compares average accuracy between group A (personalized) and group B (random).
+    """
+    if not os.path.isfile(AB_LOG_PATH):
+        return jsonify({"error": "No A/B test data yet", "groups": {}})
+
+    groups = defaultdict(lambda: {"sessions": 0, "total_accuracy": 0.0, "accuracies": []})
+    try:
+        with open(AB_LOG_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                grp = rec.get("ab_group", "")
+                acc = rec.get("accuracy")
+                event = rec.get("event", "")
+                if grp in ("A", "B") and event in ("drill_completed", "session_result") and acc is not None:
+                    groups[grp]["sessions"] += 1
+                    groups[grp]["total_accuracy"] += float(acc)
+                    groups[grp]["accuracies"].append(float(acc))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    summary = {}
+    for grp, data in groups.items():
+        n = data["sessions"]
+        avg = (data["total_accuracy"] / n) if n > 0 else 0.0
+        accs = sorted(data["accuracies"])
+        median = accs[len(accs) // 2] if accs else 0.0
+        summary[grp] = {
+            "sessions": n,
+            "avg_accuracy": round(avg, 2),
+            "median_accuracy": round(median, 2),
+            "min_accuracy": round(min(accs), 2) if accs else 0.0,
+            "max_accuracy": round(max(accs), 2) if accs else 0.0,
+        }
+
+    # Simple significance indicator
+    a_accs = groups.get("A", {}).get("accuracies", []) if "A" in groups else []
+    b_accs = groups.get("B", {}).get("accuracies", []) if "B" in groups else []
+    significance = None
+    if len(a_accs) >= 5 and len(b_accs) >= 5:
+        # Basic t-test approximation
+        mean_a = sum(a_accs) / len(a_accs)
+        mean_b = sum(b_accs) / len(b_accs)
+        var_a = sum((x - mean_a) ** 2 for x in a_accs) / (len(a_accs) - 1) if len(a_accs) > 1 else 0
+        var_b = sum((x - mean_b) ** 2 for x in b_accs) / (len(b_accs) - 1) if len(b_accs) > 1 else 0
+        se = ((var_a / len(a_accs)) + (var_b / len(b_accs))) ** 0.5 if (var_a + var_b) > 0 else 0
+        t_stat = (mean_a - mean_b) / se if se > 0 else 0
+        significance = {
+            "t_statistic": round(t_stat, 3),
+            "mean_diff": round(mean_a - mean_b, 2),
+            "likely_significant": abs(t_stat) > 1.96,
+            "note": "Positive mean_diff = Group A (personalized) outperforms Group B (random)",
+        }
+
+    return jsonify({"groups": summary, "significance": significance})
+
+
 
 
 if __name__ == "__main__":

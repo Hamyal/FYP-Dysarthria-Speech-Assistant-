@@ -121,6 +121,24 @@
                     app:iconGravity="textStart"
                     app:iconPadding="12dp"
                     app:iconTint="@color/white" />
+
+                <ProgressBar
+                    android:id="@+id/phonemeProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/weakPhonemesInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="@color/on_primary_container"
+                    android:alpha="0.85"
+                    android:visibility="gone" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

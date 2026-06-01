@@ -63,6 +63,8 @@ public class RecordDrillActivity extends AppCompatActivity {
     private AssignedDrill drill;
     private String patientId;
     private boolean isPersonalized;
+    private String abGroup = "";
+    private java.util.ArrayList<String> phonemesTargeted;
     private TextView wordsText;
     private TextView statusText;
     private TextView transcriptionSectionLabel;
@@ -102,6 +104,8 @@ public class RecordDrillActivity extends AppCompatActivity {
         patientId = getIntent().getStringExtra("patient_id");
         isPersonalized = getIntent().getBooleanExtra("is_personalized", false)
                 || (drill != null && (drill.getAssignedDrillId() == null || drill.getAssignedDrillId().isEmpty()));
+        abGroup = getIntent().getStringExtra("ab_group") != null ? getIntent().getStringExtra("ab_group") : "";
+        phonemesTargeted = getIntent().getStringArrayListExtra("phonemes_targeted");
         if (drill == null || patientId == null) {
             Toast.makeText(this, "Missing drill or patient.", Toast.LENGTH_SHORT).show();
             finish();
@@ -469,6 +473,10 @@ public class RecordDrillActivity extends AppCompatActivity {
 
         Runnable saveAndFinish = () -> FirebaseHelper.addPatientSessionRecord(patientId, record, () -> mainHandler.post(() -> {
             Toast.makeText(this, R.string.analysis_saved, Toast.LENGTH_SHORT).show();
+            // Log A/B test event if this was a personalized drill
+            if (isPersonalized && !abGroup.isEmpty()) {
+                PhonemeProfileHelper.logAbEvent(patientId, abGroup, "drill_completed", accuracy, phonemesTargeted);
+            }
             if (isPersonalized) {
                 btnDone.setVisibility(View.VISIBLE);
             } else {

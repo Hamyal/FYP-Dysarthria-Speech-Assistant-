@@ -19,3 +19,4 @@ vocalaid_api/__pycache__/
 vocalaid_api/transcriptions/*.json
 vocalaid_api/transcriptions/*.jsonl
 *.pyc
+app/google-services.json

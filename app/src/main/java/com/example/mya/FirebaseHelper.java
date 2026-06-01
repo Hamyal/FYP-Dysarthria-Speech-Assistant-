@@ -1123,4 +1123,67 @@ public class FirebaseHelper {
     public static int generateUniqueId(String path) {
         return (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
     }
+
+    // ==================== PHONEME PROFILE & A/B TESTING ====================
+
+    /** Firebase path for phoneme profiles: phoneme_profiles/{patientId} */
+    public static final String PATH_PHONEME_PROFILES = "phoneme_profiles";
+
+    /** Firebase path for A/B test assignments: ab_test_assignments/{patientId} */
+    public static final String PATH_AB_ASSIGNMENTS = "ab_test_assignments";
+
+    /** Get reference to patient's phoneme profile. */
+    public static DatabaseReference getPhonemeProfileRef(String patientId) {
+        return rootRef.child(PATH_PHONEME_PROFILES).child(patientId);
+    }
+
+    /** Save/update patient's weak phoneme profile from API analysis. */
+    public static void savePhonemeProfile(String patientId, List<Map<String, Object>> weakPhonemes, Runnable onSuccess) {
+        if (patientId == null || weakPhonemes == null) return;
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("patientId", patientId);
+        profile.put("updatedAt", System.currentTimeMillis());
+        profile.put("weakPhonemes", weakPhonemes);
+
+        rootRef.child(PATH_PHONEME_PROFILES).child(patientId).setValue(profile)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "Phoneme profile saved for " + patientId);
+                        if (onSuccess != null) onSuccess.run();
+                    } else {
+                        Log.e(TAG, "Failed to save phoneme profile", task.getException());
+                    }
+                });
+    }
+
+    /** Get or assign A/B test group for patient. Returns via callback: "A" or "B". */
+    public static void getOrAssignAbGroup(String patientId, Consumer<String> callback) {
+        if (patientId == null || callback == null) return;
+        rootRef.child(PATH_AB_ASSIGNMENTS).child(patientId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && snapshot.getValue() != null) {
+                    String group = String.valueOf(snapshot.getValue()).trim().toUpperCase();
+                    if (group.equals("A") || group.equals("B")) {
+                        callback.accept(group);
+                        return;
+                    }
+                }
+                // Assign randomly: 50/50 split
+                String newGroup = (System.currentTimeMillis() % 2 == 0) ? "A" : "B";
+                rootRef.child(PATH_AB_ASSIGNMENTS).child(patientId).setValue(newGroup);
+                callback.accept(newGroup);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.accept("A"); // default to personalized on error
+            }
+        });
+    }
+
+    /** Get reference to patient's A/B group assignment. */
+    public static DatabaseReference getAbGroupRef(String patientId) {
+        return rootRef.child(PATH_AB_ASSIGNMENTS).child(patientId);
+    }
 }

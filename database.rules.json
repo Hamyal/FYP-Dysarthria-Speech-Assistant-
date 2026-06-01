@@ -113,6 +113,19 @@
           }
         }
       }
+    },
+    "phoneme_profiles": {
+      "$patientId": {
+        ".read": "auth != null && (auth.uid === $patientId || root.child('Patient').child($patientId).child('assigned_therapist').val() === auth.uid)",
+        ".write": "auth != null && (auth.uid === $patientId || root.child('Patient').child($patientId).child('assigned_therapist').val() === auth.uid)"
+      }
+    },
+    "ab_test_assignments": {
+      "$patientId": {
+        ".read": "auth != null && auth.uid === $patientId",
+        ".write": "auth != null && auth.uid === $patientId",
+        ".validate": "newData.isString() && (newData.val() == 'A' || newData.val() == 'B')"
+      }
     }
   }
 }
